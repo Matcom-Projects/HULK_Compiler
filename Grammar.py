@@ -1,106 +1,162 @@
 from cmp.pycompiler import Grammar
 
 G = Grammar()
-
 Program = G.NonTerminal('Program', True)
-DeclList, Decl, Stat, Expr, SimpleExpr = G.NonTerminals('DeclList Decl Stat Expr SimpleExpr')
-ArithExpr, Disj, Conj, Neg, DynTest, Comp, NumExpr, Term, Factor, Sign, Atom = G.NonTerminals('ArithExpr Disj Conj Neg DynTest Comp NumExpr Term Factor Sign Atom')
-ExprBlock, StatList, ExprList, ExprTail, AssignList, VarDecl, ElifBranch = G.NonTerminals('ExprBlock StatList ExprList ExprTail AssignList VarDecl ElifBranch')
-FuncDecl, Body, ArgList, ArgTail, TypeDecl, FeatureList = G.NonTerminals('FuncDecl Body ArgList ArgTail TypeDecl FeatureList')
-ProtDecl, ProtMethods, FullyTypedArgs, FullyTypedTail, TypeList = G.NonTerminals('ProtDecl ProtMethods FullyTypedArgs FullyTypedTail TypeList')
 
-num, str, bool, const, id, type_id = G.Terminals('num str bool const id type_id')
-leT, iN, iF, eliF, elsE, whilE, foR, aS, iS, neW = G.Terminals('let in if elif else while for as is new')
-function, type, inherits, protocol, extends = G.Terminals('function type inherits protocol extends')
-plus, minus, star, div, mod, pow, starstar = G.Terminals('+ - * / % ^ **')
-eq, coloneq, eqeq, noteq, less, greater, leq, geq = G.Terminals('= := == != < > <= >=')
-anD, oR, noT, oror = G.Terminals('& | ! ||')
-dot, comma, colon, semi, at, atat, arrow = G.Terminals('. , : ; @ @@ =>')
-opar, cpar, obrack, cbrack, obrace, cbrace = G.Terminals('( ) [ ] { }')
+DeclarationList, Declaration, Statement, Expression, SimpleExpression = G.NonTerminals('DeclarationList Declaration Statement Expression SimpleExpression')
+ArithmeticExpression, Disjunction, Conjunction, Negation, DynamicTest, Comparison, NumericExpression, Term, Factor, Sign, Atom = G.NonTerminals('ArithmeticExpression Disjunction Conjunction Negation DynamicTest Comparison NumericExpression Term Factor Sign Atom')
+ExpressionBlock, StatementList, ExpressionList, ExpressionTail, AssignmentList, VariableDeclaration, ElseIfBranch = G.NonTerminals('ExpressionBlock StatementList ExpressionList ExpressionTail AssignmentList VariableDeclaration ElseIfBranch')
+FunctionDeclaration, Body, ArgumentList, ArgumentTail, TypeDeclaration, FeatureList = G.NonTerminals('FunctionDeclaration Body ArgumentList ArgumentTail TypeDeclaration FeatureList')
+ProtocolDeclaration, ProtocolMethods, FullyTypedArguments, FullyTypedTail, TypeList = G.NonTerminals('ProtocolDeclaration ProtocolMethods FullyTypedArguments FullyTypedTail TypeList')
 
 
-Program %= DeclList + Stat, lambda ctx: ctx.NonTerminal(1).propagate_attributes(ctx[2])
+NUMBER, STRING, BOOLEAN, CONSTANT, IDENTIFIER, TYPE_IDENTIFIER = G.Terminals('NUMBER STRING BOOLEAN CONSTANT IDENTIFIER TYPE_IDENTIFIER')
+LET, IN, IF, ELIF, ELSE, WHILE, FOR, AS, IS, NEW = G.Terminals('LET IN IF ELIF ELSE WHILE FOR AS IS NEW')
+FUNCTION, TYPE, INHERITS, PROTOCOL, EXTENDS = G.Terminals('FUNCTION TYPE INHERITS PROTOCOL EXTENDS')
+PLUS, MINUS, STAR, DIVIDE, MODULO, POW, POWER2 = G.Terminals('+ - * / % ^ **')
+EQUAL, ASSIGN, EQUALS, NOT_EQUALS, LESS_THAN, GREATER_THAN, LESS_EQUAL, GREATER_EQUAL = G.Terminals('= := == != < > <= >=')
+AND, OR, NOT, OR_OR = G.Terminals('& | ! ||')
+DOT, COMMA, COLON, SEMICOLON, AT, AT_AT, ARROW = G.Terminals('. , : ; @ @@ =>')
+OPEN_PAREN, CLOSE_PAREN, OPEN_BRACK, CLOSE_BRACK, OPEN_BRACE, CLOSE_BRACE = G.Terminals('( ) [ ] { }')
 
-DeclList %= Decl + DeclList, lambda ctx: ctx.NonTerminal(1).merge_with(ctx[2])
-DeclList %= G.Epsilon, lambda ctx: []
+Program %= DeclarationList + Statement, lambda h, s: createProgramNode(s[1], s[2])
 
-Decl %= FuncDecl, lambda ctx: ctx[1]
-Decl %= TypeDecl, lambda ctx: ctx[1]
-Decl %= ProtDecl, lambda ctx: ctx[1]
+DeclarationList %= Declaration + DeclarationList, lambda h, s: [s[1]] + s[2]
+DeclarationList %= G.Epsilon, lambda h, s: []
 
-Stat %= SimpleExpr + semi, lambda ctx: ctx[1]
-Stat %= ExprBlock, lambda ctx: ctx[1]
-Stat %= ExprBlock + semi, lambda ctx: ctx[1]
+Declaration %= FunctionDeclaration, lambda h, s: s[1]
+Declaration %= TypeDeclaration, lambda h, s: s[1]
+Declaration %= ProtocolDeclaration, lambda h, s: s[1]
 
-Expr %= SimpleExpr, lambda ctx: ctx[1]
-Expr %= ExprBlock, lambda ctx: ctx[1]
+Statement %= SimpleExpression + SEMICOLON, lambda h, s: s[1]
+Statement %= ExpressionBlock, lambda h, s: s[1]
+Statement %= ExpressionBlock + SEMICOLON, lambda h, s: s[1]
 
-SimpleExpr %= leT + AssignList + iN + SimpleExpr, lambda ctx: ctx[1].assign(ctx[2], ctx[4])
-SimpleExpr %= iF + opar + Expr + cpar + Expr + ElifBranch + elsE + SimpleExpr, lambda ctx: ctx[1].conditional(ctx[3], ctx[5], ctx[6], ctx[8])
-SimpleExpr %= whilE + opar + Expr + cpar + SimpleExpr, lambda ctx: ctx[1].loop(ctx[3], ctx[5])
-SimpleExpr %= foR + opar + id + iN + Expr + cpar + SimpleExpr, lambda ctx: ctx[1].loop(ctx[3], ctx[5], ctx[7])
-SimpleExpr %= id + coloneq + SimpleExpr, lambda ctx: ctx[1].assign(ctx[3])
-SimpleExpr %= id + dot + id + coloneq + SimpleExpr, lambda ctx: ctx[1].attribute_assign(ctx[3], ctx[5])
-SimpleExpr %= ArithExpr, lambda ctx: ctx[1]
+Expression %= SimpleExpression, lambda h, s: s[1]
+Expression %= ExpressionBlock, lambda h, s: s[1]
 
-ExprBlock %= obrace + StatList + cbrace, lambda ctx: ctx[2]
-ExprBlock %= leT + AssignList + iN + ExprBlock, lambda ctx: ctx[1].assign_block(ctx[2], ctx[4])
-ExprBlock %= iF + opar + Expr + cpar + Expr + ElifBranch + elsE + ExprBlock, lambda ctx: IfElseBlock(ctx[3], ctx[5], ctx[7], ctx[8])
-ExprBlock %= whilE + opar + Expr + cpar + ExprBlock, lambda ctx: ctx[1].while_loop(ctx[3], ctx[5])
-ExprBlock %= foR + opar + id + iN + Expr + cpar + ExprBlock, lambda ctx: ctx[1].for_loop(ctx[3], ctx[5], ctx[7])
-ExprBlock %= id + coloneq + ExprBlock, lambda ctx: ctx[1].assign(ctx[3])
-ExprBlock %= id + dot + id + coloneq + ExprBlock, lambda ctx: ctx[1].attribute_assign(ctx[3], ctx[5])
+SimpleExpression %= LET + AssignmentList + IN + SimpleExpression, lambda h, s: constructLet(s[2], s[4])
+SimpleExpression %= IF + OPEN_PAREN + Expression + CLOSE_PAREN + Expression + ElseIfBranch + ELSE + SimpleExpression, lambda h, s: constructIf(s[3], s[5], s[6], s[8])
+SimpleExpression %= WHILE + OPEN_PAREN + Expression + CLOSE_PAREN + SimpleExpression, lambda h, s: constructWhile(s[3], s[5])
+SimpleExpression %= FOR + OPEN_PAREN + IDENTIFIER + IN + Expression + CLOSE_PAREN + SimpleExpression, lambda h, s: constructFor(s[3], s[5], s[7])
+SimpleExpression %= IDENTIFIER + ASSIGN + SimpleExpression, lambda h, s: assignDirect(s[1], s[3])
+SimpleExpression %= IDENTIFIER + DOT + IDENTIFIER + ASSIGN + SimpleExpression, lambda h, s: assignDirect(s[3], s[5], True)
+SimpleExpression %= ArithmeticExpression, lambda h, s: s[1]
 
-StatList %= Stat + StatList, lambda ctx: [ctx[1]] + ctx[2]
-StatList %= G.Epsilon, lambda ctx: []
+ExpressionBlock %= OPEN_BRACE + StatementList + CLOSE_BRACE, lambda h, s: constructExpressionBlock(s[2])
+ExpressionBlock %= LET + AssignmentList + IN + ExpressionBlock, lambda h, s: constructLet(s[2], s[4])
+ExpressionBlock %= IF + OPEN_PAREN + Expression + CLOSE_PAREN + Expression + ElseIfBranch + ELSE + ExpressionBlock, lambda h, s: constructIf(s[3], s[5], s[6], s[8])
+ExpressionBlock %= WHILE + OPEN_PAREN + Expression + CLOSE_PAREN + ExpressionBlock, lambda h, s: constructWhile(s[3], s[5])
+ExpressionBlock %= FOR + OPEN_PAREN + IDENTIFIER + IN + Expression + CLOSE_PAREN + ExpressionBlock, lambda h, s: constructFor(s[3], s[5], s[7])
+ExpressionBlock %= IDENTIFIER + ASSIGN + ExpressionBlock, lambda h, s: assignDirect(s[1], s[3])
+ExpressionBlock %= IDENTIFIER + DOT + IDENTIFIER + ASSIGN + ExpressionBlock, lambda h, s: assignDirect(s[3], s[5], True)
 
-ExprList %= Expr + ExprTail, lambda ctx: [ctx[1]] + ctx[2]
-ExprList %= G.Epsilon, lambda ctx: []
+StatementList %= Statement, lambda h, s: [s[1]]
+StatementList %= Statement + StatementList, lambda h, s: [s[1]] + s[2]
 
-ExprTail %= comma + Expr + ExprTail, lambda ctx: [ctx[2]] + ctx[3]
-ExprTail %= G.Epsilon, lambda ctx: []
+ExpressionList %= Expression + ExpressionTail, lambda h, s: [s[1]] + s[2]
+ExpressionList %= G.Epsilon, lambda h, s: []
 
-AssignList %= VarDecl + eq + Expr, lambda ctx: [ctx[1].assign(ctx[3])]
-AssignList %= VarDecl + eq + Expr + comma + AssignList, lambda ctx: [ctx[1].assign(ctx[3])] + ctx[5]
+ExpressionTail %= COMMA + Expression + ExpressionTail, lambda h, s: [s[2]] + s[3]
+ExpressionTail %= G.Epsilon, lambda h, s: []
 
-VarDecl %= id, lambda ctx: VariableDeclaration(ctx[1])
-VarDecl %= id + colon + type_id, lambda ctx: TypedVariableDeclaration(ctx[1], ctx[3])
+AssignmentList %= VariableDeclaration + EQUAL + Expression, lambda h, s: [assignNode(s[1], s[3])]
+AssignmentList %= VariableDeclaration + EQUAL + Expression + COMMA + AssignmentList, lambda h, s: [assignNode(s[1], s[3])] + s[5]
 
-ElifBranch %= eliF + opar + Expr + cpar + Expr + ElifBranch, lambda ctx: [ctx[1].elif_clause(ctx[3], ctx[5])] + ctx[6]
-ElifBranch %= G.Epsilon, lambda ctx: []
+VariableDeclaration %= IDENTIFIER, lambda h, s: defineVariable(s[1])
+VariableDeclaration %= IDENTIFIER + COLON + TYPE_IDENTIFIER, lambda h, s: defineVariable(s[1], s[3])
 
-FuncDecl %= function + id + opar + ArgList + cpar + Body, lambda ctx: FunctionDeclaration(ctx[2], ctx[4], ctx[6])
-FuncDecl %= function + id + opar + ArgList + cpar + colon + type_id + Body, lambda ctx: TypedFunctionDeclaration(ctx[2], ctx[4], ctx[7], ctx[8])
+ElifBranch %= ELIF + OPEN_PAREN + Expression + CLOSE_PAREN + Expression + ElifBranch, lambda h, s: [(s[3], s[5])] + s[6]
+ElifBranch %= G.Epsilon, lambda h, s: []
 
-Body %= arrow + Stat, lambda ctx: ctx[2]
-Body %= obrace + StatList + cbrace, lambda ctx: ctx[2]
+ArithmeticExpression %= Disjunction, lambda h, s: s[1]
+ArithmeticExpression %= ArithmeticExpression + AT + Disjunction, lambda h, s: concatenate(s[1], s[3])
+ArithmeticExpression %= ArithmeticExpression + AT_AT + Disjunction, lambda h, s: concatenateWithSpace(s[1], s[3])
 
-ArgList %= VarDecl + ArgTail, lambda ctx: [ctx[1]] + ctx[2]
-ArgList %= G.Epsilon, lambda ctx: []
+Disjunction %= Conjunction, lambda h, s: s[1]
+Disjunction %= Disjunction + OR + Conjunction, lambda h, s: disjunctionOr(s[1], s[3])
 
-ArgTail %= comma + VarDecl + ArgTail, lambda ctx: [ctx[2]] + ctx[3]
-ArgTail %= G.Epsilon, lambda ctx: []
+Conjunction %= Negation, lambda h, s: s[1]
+Conjunction %= Conjunction + AND + Negation, lambda h, s: conjunctionAnd(s[1], s[3])
 
-TypeDecl %= type + type_id + obrace + FeatureList + cbrace, lambda ctx: TypeDeclaration(ctx[2], ctx[4])
-TypeDecl %= type + type_id + opar + ArgList + cpar + obrace + FeatureList + cbrace, lambda ctx: FunctionTypeDeclaration(ctx[2], ctx[4], ctx[7])
-TypeDecl %= type + type_id + inherits + type_id + obrace + FeatureList + cbrace, lambda ctx: InheritedTypeDeclaration(ctx[2], ctx[6], ctx[4])
-TypeDecl %= type + type_id + opar + ArgList + cpar + inherits + type_id + opar + ExprList + cpar + obrace + FeatureList + cbrace, lambda ctx: ComplexTypeDeclaration(ctx[2], ctx[4], ctx[7], ctx[9], ctx[12])
+Negation %= DynamicTest, lambda h, s: s[1]
+Negation %= NOT + DynamicTest, lambda h, s: negateCondition(s[2])
 
-FeatureList %= VarDecl + eq + Stat + FeatureList, lambda ctx: [ctx[1].initialize(ctx[3])] + ctx[4]
-FeatureList %= id + opar + ArgList + cpar + Body + FeatureList, lambda ctx: [ctx[1].method(ctx[3], ctx[5])] + ctx[6]
-FeatureList %= id + opar + ArgList + cpar + colon + type_id + Body + FeatureList, lambda ctx: [ctx[1].typed_method(ctx[3], ctx[6], ctx[7])] + ctx[8]
-FeatureList %= G.Epsilon, lambda ctx: []
+DynamicTest %= Comparison, lambda h, s: s[1]
+DynamicTest %= Comparison + IS + TYPE_IDENTIFIER, lambda h, s: dynamicTypeCheck(s[1], s[3])
 
-ProtDecl %= protocol + type_id + obrace + ProtMethods + cbrace, lambda ctx: ProtocolDeclaration(ctx[2], ctx[4])
-ProtDecl %= protocol + type_id + extends + TypeList + obrace + ProtMethods + cbrace, lambda ctx: ExtendedProtocolDeclaration(ctx[2], ctx[4], ctx[6])
+Comparison %= NumericExpression, lambda h, s: s[1]
+Comparison %= NumericExpression + EQUALS + NumericExpression, lambda h, s: compareEqual(s[1], s[3])
+Comparison %= NumericExpression + NOT_EQUALS + NumericExpression, lambda h, s: compareNotEqual(s[1], s[3])
+Comparison %= NumericExpression + LESS_THAN + NumericExpression, lambda h, s: compareLessThan(s[1], s[3])
+Comparison %= NumericExpression + GREATER_THAN + NumericExpression, lambda h, s: compareGreaterThan(s[1], s[3])
+Comparison %= NumericExpression + LESS_EQUAL + NumericExpression, lambda h, s: compareLessEqual(s[1], s[3])
+Comparison %= NumericExpression + GREATER_EQUAL + NumericExpression, lambda h, s: compareGreaterEqual(s[1], s[3])
 
-ProtMethods %= id + opar + FullyTypedArgs + cpar + colon + type_id + semi + ProtMethods, lambda ctx: [ctx[1].define_method(ctx[3], ctx[6])] + ctx[8]
-ProtMethods %= G.Epsilon, lambda ctx: []
+NumericExpression %= Term, lambda h, s: s[1]
+NumericExpression %= NumericExpression + PLUS + Term, lambda h, s: addition(s[1], s[3])
+NumericExpression %= NumericExpression + MINUS + Term, lambda h, s: subtraction(s[1], s[3])
 
-FullyTypedArgs %= id + colon + type_id + FullyTypedTail, lambda ctx: [TypedParameter(ctx[1], ctx[3])] + ctx[4]
-FullyTypedArgs %= G.Epsilon, lambda ctx: []
+Term %= Factor, lambda h, s: s[1]
+Term %= Term + STAR + Factor, lambda h, s: multiply(s[1], s[3])
+Term %= Term + DIVIDE + Factor, lambda h, s: divide(s[1], s[3])
+Term %= Term + MODULO + Factor, lambda h, s: modulo(s[1], s[3])
 
-FullyTypedTail %= comma + id + colon + type_id + FullyTypedTail, lambda ctx: [TypedParameter(ctx[2], ctx[4])] + ctx[5]
-FullyTypedTail %= G.Epsilon, lambda ctx: []
+Factor %= Sign, lambda h, s: s[1]
+Factor %= Sign + POWER + Factor, lambda h, s: power(s[1], s[3])
+Factor %= Sign + POWER2 + Factor, lambda h, s: power(s[1], s[3])
 
-TypeList %= type_id + (comma + TypeList | G.Epsilon), lambda ctx: [ctx[1]] + (ctx[2] if len(ctx) > 2 else [])
+Sign %= Atom, lambda h, s: s[1]
+Sign %= MINUS + Atom, lambda h, s: negativeSign(s[2])
+
+Atom %= NUMBER, lambda h, s: literalNumber(s[1])
+Atom %= STRING, lambda h, s: literalString(s[1])
+Atom %= BOOLEAN, lambda h, s: literalBool(s[1])
+Atom %= CONSTANT, lambda h, s: constantNode(s[1])
+Atom %= IDENTIFIER, lambda h, s: variableNode(s[1])
+Atom %= OPEN_BRACK + ExpressionList + CLOSE_BRACK, lambda h, s: createVector(s[2])
+Atom %= OPEN_BRACK + Expression + OR_OR + IDENTIFIER + IN + Expression + CLOSE_BRACK, lambda h, s: implicitVectorConstruction(s[2], s[4], s[6])
+Atom %= OPEN_PAREN + Expression + CLOSE_PAREN, lambda h, s: s[2]
+Atom %= NEW + TYPE_IDENTIFIER + OPEN_PAREN + ExpressionList + CLOSE_PAREN, lambda h, s: instantiateType(s[2], s[4])
+Atom %= IDENTIFIER + OPEN_PAREN + ExpressionList + CLOSE_PAREN, lambda h, s: functionCall(s[1], s[3])
+Atom %= Atom + AS + TYPE_IDENTIFIER, lambda h, s: downcastType(s[1], s[3])
+Atom %= Atom + OPEN_BRACK + Expression + CLOSE_BRACK, lambda h, s: indexAccess(s[1], s[3])
+Atom %= IDENTIFIER + DOT + IDENTIFIER + OPEN_PAREN + ExpressionList + CLOSE_PAREN, lambda h, s: methodCall(s[1], s[3], s[5])
+Atom %= IDENTIFIER + DOT + IDENTIFIER, lambda h, s: attributeAccess(s[1], s[3])
+
+FunctionDeclaration %= FUNCTION + IDENTIFIER + OPEN_PAREN + ArgumentList + CLOSE_PAREN + Body, lambda h, s: declareFunction(s[2], s[4], s[6])
+FunctionDeclaration %= FUNCTION + IDENTIFIER + OPEN_PAREN + ArgumentList + CLOSE_PAREN + COLON + TYPE_IDENTIFIER + Body, lambda h, s: declareFunction(s[2], s[4], s[8], return_type=s[7])
+
+TypeDeclaration %= TYPE + TYPE_IDENTIFIER + OPEN_BRACE + FeatureList + CLOSE_BRACE, lambda h, s: declareType(s[2], s[4])
+TypeDeclaration %= TYPE + TYPE_IDENTIFIER + OPEN_PAREN + ArgumentList + CLOSE_PAREN + OPEN_BRACE + FeatureList + CLOSE_BRACE, lambda h, s: declareType(s[2], s[7], s[4])
+TypeDeclaration %= TYPE + TYPE_IDENTIFIER + INHERITS + TYPE_IDENTIFIER + OPEN_BRACE + FeatureList + CLOSE_BRACE, lambda h, s: declareType(s[2], s[6], base_type=s[4])
+TypeDeclaration %= TYPE + TYPE_IDENTIFIER + OPEN_PAREN + ArgumentList + CLOSE_PAREN + INHERITS + TYPE_IDENTIFIER + OPEN_PAREN + ExpressionList + CLOSE_PAREN + OPEN_BRACE + FeatureList + CLOSE_BRACE, lambda h, s: declareType(s[2], s[12], s[4], s[7], s[9])
+
+ProtocolDeclaration %= PROTOCOL + TYPE_IDENTIFIER + OPEN_BRACE + ProtocolMethods + CLOSE_BRACE, lambda h, s: declareProtocol(s[2], s[4])
+ProtocolDeclaration %= PROTOCOL + TYPE_IDENTIFIER + EXTENDS + TypeList + OPEN_BRACE + ProtocolMethods + CLOSE_BRACE, lambda h, s: declareProtocol(s[2], s[6], s[4])
+
+ArgumentList %= VariableDeclaration + ArgumentTail, lambda h, s: [s[1]] + s[2]
+ArgumentList %= G.Epsilon, lambda h, s: []
+
+ArgumentTail %= COMMA + VariableDeclaration + ArgumentTail, lambda h, s: [s[2]] + s[3]
+ArgumentTail %= G.Epsilon, lambda h, s: []
+
+FeatureList %= VariableDeclaration + EQUAL + Statement + FeatureList, lambda h, s: [defineFeature(s[1], s[3])] + s[4]
+FeatureList %= IDENTIFIER + OPEN_PAREN + ArgumentList + CLOSE_PAREN + Body + FeatureList, lambda h, s: [defineMethod(s[1], s[3], s[5])] + s[6]
+FeatureList %= IDENTIFIER + OPEN_PAREN + ArgumentList + CLOSE_PAREN + COLON + TYPE_IDENTIFIER + Body + FeatureList, lambda h, s: [defineMethod(s[1], s[3], s[7], return_type=s[6])] + s[8]
+FeatureList %= G.Epsilon, lambda h, s: []
+
+ProtocolMethods %= IDENTIFIER + OPEN_PAREN + FullyTypedArgs + CLOSE_PAREN + COLON + TYPE_IDENTIFIER + SEMICOLON + ProtocolMethods, lambda h, s: [declareProtocolMethod(s[1], s[3], s[6])] + s[8]
+ProtocolMethods %= G.Epsilon, lambda h, s: []
+
+FullyTypedArgs %= IDENTIFIER + COLON + TYPE_IDENTIFIER + FullyTypedTail, lambda h, s: [defineVariable(s[1], s[3])] + s[4]
+FullyTypedArgs %= G.Epsilon, lambda h, s: []
+
+FullyTypedTail %= COMMA + IDENTIFIER + COLON + TYPE_IDENTIFIER + FullyTypedTail, lambda h, s: [defineVariable(s[2], s[4])] + s[5]
+FullyTypedTail %= G.Epsilon, lambda h, s: []
+
+TypeList %= TYPE_IDENTIFIER, lambda h, s: [s[1]]
+TypeList %= TYPE_IDENTIFIER + COMMA + TypeList, lambda h, s: [s[1]] + s[3]
+
+Body %= ARROW + Stat, lambda h, s: s[2]
+Body %= OPEN_BRACE + StatList + CLOSE_BRACE, lambda h, s: s[2]
