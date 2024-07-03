@@ -1,4 +1,4 @@
-from nfa_dfa import DFA,NFA,nfa_to_dfa
+from Lexer.nfa_dfa import DFA,NFA,nfa_to_dfa
 from cmp.utils import DisjointSet
 
 def automata_union(a1, a2):
