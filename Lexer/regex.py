@@ -44,63 +44,66 @@ class Regex:
         G = Grammar()
 
         E = G.NonTerminal('E', True)
-        T, F, A, X, Y, Z = G.NonTerminals('T F A X Y Z')
+        T, F, A = G.NonTerminals('T F A')
         pipe, star, opar, cpar, symbol, epsilon = G.Terminals('| * ( ) symbol ε')
 
-        # > PRODUCTIONS???
-        # Your code here!!!
-        ############################ BEGIN PRODUCTIONS ############################  
+        # # > PRODUCTIONS???
+        # # Your code here!!!
+        # ############################ BEGIN PRODUCTIONS ############################  
 
 
-        # ========================== { E --> T X } ============================== #
-        E %= T + X, lambda h,s: s[2], None, lambda h,s: s[1]                      
+        # # ========================== { E --> T X } ============================== #
+        # E %= T + X, lambda h,s: s[2], None, lambda h,s: s[1]                      
+        E %= E + pipe + T, lambda h,s: UnionNode(s[1],s[3])
+        E %= T, lambda h,s: s[1]
+        # # ========================== { X --> |T X } ============================== #
+        # # ========================== { X --> epsilon } ============================== #
+        # X %= pipe + T + X, lambda h,s: s[3], lambda h,s: UnionNode(h[0],s[2])    
+        # X %= G.Epsilon, lambda h,s: h[0]                                                    
 
-        # ========================== { X --> |T X } ============================== #
-        # ========================== { X --> epsilon } ============================== #
-        X %= pipe + T + X, lambda h,s: s[3], None, None, lambda h,s: UnionNode(h[0],s[2])    
-        X %= G.Epsilon, lambda h,s: h[0]                                                    
+        # # ========================== { T --> F Y } ============================== #
+        # T %= F + Y, lambda h,s: s[2], None, lambda h,s: s[1]                      
+        T %= T + F, lambda h,s: ConcatNode(s[1],s[2])
+        T %= F, lambda h,s:s[1]
+        # # ========================== { Y --> F Y } ============================== #
+        # # ========================== { Y --> epsilon } ============================== #
+        # Y %= F + Y, lambda h,s: s[2],  lambda h,s: ConcatNode(h[0] , s[1])        
+        # Y %= G.Epsilon, lambda h,s: h[0]                                                    
 
-        # ========================== { T --> F Y } ============================== #
-        T %= F + Y, lambda h,s: s[2], None, lambda h,s: s[1]                      
+        # # ========================== { F --> A Z } ============================== #
+        # F %= A + Z, lambda h,s: s[2],None,lambda h,s: s[1]
+        F %= F + star, lambda h,s: ClosureNode(s[1])
+        F %= A,lambda h,s:s[1]
+        # # ========================== { Z --> * Z } ============================== #
+        # # ========================== { Z --> epsilon } ============================== #
 
-        # ========================== { Y --> F Y } ============================== #
-        # ========================== { Y --> epsilon } ============================== #
-        Y %= F + Y, lambda h,s: s[2], None, lambda h,s: ConcatNode(h[0] , s[1])        
-        Y %= G.Epsilon, lambda h,s: h[0]                                                    
-
-        # ========================== { F --> A Z } ============================== #
-        F %= A + Z, lambda h,s: s[2],None,lambda h,s: s[1]
-
-        # ========================== { Z --> * Z } ============================== #
-        # ========================== { Z --> epsilon } ============================== #
-        Z %= star + Z, lambda h,s: s[2], None,lambda h,s:ClosureNode(h[0])
-        Z %= G.Epsilon, lambda h,s: h[0] 
-
-        # ========================== { A --> symbol } ============================== #
-        # ========================== { A --> ( E ) } ============================== #
-        # ========================== { A --> epsilon } ============================== #
-        A %= symbol, lambda h,s: SymbolNode(s[1]) , None
-        A %= opar + E + cpar, lambda h,s: s[2], None, None, None
+        # # ========================== { A --> symbol } ============================== #
+        # # ========================== { A --> ( E ) } ============================== #
+        # # ========================== { A --> epsilon } ============================== #
+        A %= symbol, lambda h,s: SymbolNode(s[1]) 
+        A %= opar + E + cpar, lambda h,s: s[2]
         A %= epsilon, lambda h,s: EpsilonNode(h[0])
 
 
-        ############################# END PRODUCTIONS #############################
+        # ############################# END PRODUCTIONS #############################
         self.G = G
         self.automaton = self.build_automaton(text)
 
     def build_automaton(self,text):
-        # print(self.G)
-        # for lex in '| * ( ) ε'.split():
-        #     print(self.G[f'{lex}'])
         tokens = self.regex_tokenizer(text,self.G)
         print(tokens)
         parser = LR1Parser(self.G)
-        parse,operation = parser(tokens,get_shift_reduce=True)
-        parse
+        parse,operation = parser([token.token_type for token in tokens],get_shift_reduce=True)
+        print(parse)
+        print(operation)
         ast = evaluate_reverse_parse(parse,operation,tokens)
+        print(ast)
         nfa = ast.evaluate()
+        print(nfa)
         dfa = nfa_to_dfa(nfa)
-        return automata_minimization(dfa)
+        print(dfa)
+        #mini = automata_minimization(dfa)
+        return dfa
 
     def regex_tokenizer(self,text, G, skip_whitespaces=True):
         tokens = []
@@ -108,9 +111,9 @@ class Regex:
         # Your code here!!!
         fixed_tokens = { lex: Token(f'{lex}', G[lex]) for lex in '| * ( ) ε'.split() }
         for char in text:
-            if skip_whitespaces and char.isspace():
-                continue
-            # Your code here!!!
+            # if skip_whitespaces and char.isspace():
+            #     continue
+            # # Your code here!!!
             try:
                 token = fixed_tokens[char]
             except:
