@@ -34,88 +34,37 @@ class Lexer:
     def _walk(self, string):
         state = self.automaton
         final = state if state.final else None
-        final_lex = lex =''
+        final_lex = lex = ''
         
         for symbol in string:
-            # Your code here!!!
-            if state.has_transition(symbol):
-                final_lex += symbol
-                state = state[symbol][0]
-
+            try:
+                state = state.transitions[symbol][0]
+                lex += symbol
                 if state.final:
+                    final_lex = lex
                     final = state
-                    final.lex = final_lex
-            else:
-                break
-        
-        if final:
-            return final, final_lex
+            except KeyError:
+                return final, final_lex
+        return final, final_lex
 
     def _tokenize(self, text):
 
-        index = 0
-        line = 1
-        column = 1
-        remaining_text = text
-
-        for i, symbol in enumerate(text):
-            if symbol == "\n":
-                line+=1
-                column=1 
-                index += 1
-            elif symbol == " ":
-                column+= 1
-                index += 1
-            else:
-                remaining_text = text[index:]
+        while len(text)>0:
+            if text == 0:
                 break
+            state_final,final = self._walk(text)
+            min_tag = 10000
+            for state in state_final.state:
+                if state.final:
+                    n,token_type = state.tag
+                    if n < min_tag:
+                        min_tag = n
+                        final_type = token_type
 
-    
-        while text:
-
-            try:
-                final, TokenLex = self._walk(remaining_text)
-            except TypeError:
-                raise Exception(f"Lexer Exception: Token '{remaining_text[0]}' is not valid. ({line},{column})")
-
-            index = len(TokenLex)
-            for i, symbol in enumerate(remaining_text):
-                if i < index:
-                    continue
-
-                if symbol == "\n": 
-                    line+=1
-                    column=1 
-                    index += 1
-                elif symbol == " ":
-                    column+= 1
-                    index += 1
-                else:
-                    remaining_text= remaining_text[index:]
-                    break
-            if final:
-                yield TokenLex, final.tag, line,column
-
-        yield '$', self.eof,line,column
-
-
-        # # Your code here!!!
-        # while len(text)>0:
-        #     if text == 0:
-        #         break
-        #     state_final,final = self._walk(text)
-        #     min_tag = 10000
-        #     for state in state_final.state:
-        #         if state.final:
-        #             n,token_type = state.tag
-        #             if n < min_tag:
-        #                 min_tag = n
-        #                 final_type = token_type
-
-        #     text = text[len(final):]
-        #     yield final,final_type,0,0
+            text = text[len(final):]
+            yield final,final_type,0,0
         
-        # yield '$', self.eof,0,0
+        yield '$', self.eof,0,0
     
     def __call__(self, text):
         return [ Token(lex, ttype,line,column) for lex, ttype,line,column in self._tokenize(text) ]

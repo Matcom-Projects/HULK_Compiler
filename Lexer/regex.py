@@ -72,7 +72,7 @@ class Regex:
 
         # # ========================== { F --> A Z } ============================== #
         # F %= A + Z, lambda h,s: s[2],None,lambda h,s: s[1]
-        F %= F + star, lambda h,s: ClosureNode(s[1])
+        F %= A + star, lambda h,s: ClosureNode(s[1])
         F %= A,lambda h,s:s[1]
         # # ========================== { Z --> * Z } ============================== #
         # # ========================== { Z --> epsilon } ============================== #
@@ -82,7 +82,7 @@ class Regex:
         # # ========================== { A --> epsilon } ============================== #
         A %= symbol, lambda h,s: SymbolNode(s[1]) 
         A %= opar + E + cpar, lambda h,s: s[2]
-        A %= epsilon, lambda h,s: EpsilonNode(h[0])
+        A %= epsilon, lambda h,s: EpsilonNode(s[1])
 
 
         # ############################# END PRODUCTIONS #############################
