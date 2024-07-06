@@ -135,87 +135,86 @@ def automata_closure(a1):
     return NFA(states, finals, transitions, start)
 
 def distinguish_states(group, automaton, partition):
-    split = []
+    split = {}
     vocabulary = tuple(automaton.vocabulary)
-    myPartition = DisjointSet(*range(len(group)))
 
-    for i in range(0,len(group)):
-        for j in range(i+1,len(group)):
+    for member in group:
+        for prt in split.keys():
             for symbol in vocabulary:
-                a = automaton.transitions[group[i].value][symbol][0]
-                b = automaton.transitions[group[j].value][symbol][0]
-
-                if partition[a].representative != partition[b].representative:
+                try:
+                    t_member = automaton.transitions[member.value][symbol][0]
+                    t_member = partition[t_member].representative
+                except KeyError:
+                    t_member = -1
+                try:
+                    t_prt = automaton.transitions[prt][symbol][0]
+                    t_prt = partition[t_prt].representative
+                except KeyError:
+                    t_prt = -1
+                if not t_member == t_prt:
                     break
             else:
-                myPartition.merge([i,j])
+                split[prt].append(member.value)
+                break
+        else:
+            split[member.value] = [member.value]
 
-    for item in myPartition.groups:
-        temp =[]
-        for i in item:
-            temp.append(group[i.value].value)
-        split.append(temp)
+    return [group for group in split.values()]
 
-    return split
-            
+
 def state_minimization(automaton):
     partition = DisjointSet(*range(automaton.states))
-    
+
     ## partition = { NON-FINALS | FINALS }
-    # Your code here
-    partition.merge(automaton.finals)
+    if len(automaton.finals) < automaton.states - 1:
+        partition.merge(
+            [
+                state
+                for state in range(automaton.states)
+                if not state in automaton.finals
+            ]
+        )
+    if len(automaton.finals) > 1:
+        partition.merge(list(automaton.finals))
 
-    start = automaton.start
-
-    for item in range(0,automaton.states):
-        if item not in automaton.finals:
-            partition.merge([start,item])
-    
     while True:
         new_partition = DisjointSet(*range(automaton.states))
-        
+
         ## Split each group if needed (use distinguish_states(group, automaton, partition))
-        # Your code here
         for group in partition.groups:
-            for item in distinguish_states(group,automaton,partition):
-                new_partition.merge(item)
+            for new_group in distinguish_states(group, automaton, partition):
+                if len(new_group) > 1:
+                    new_partition.merge(new_group)
 
         if len(new_partition) == len(partition):
             break
 
         partition = new_partition
-        
+
     return partition
+
 
 def automata_minimization(automaton):
     partition = state_minimization(automaton)
-    
+
     states = [s for s in partition.representatives]
-    
+
     transitions = {}
-    finals = []
     for i, state in enumerate(states):
         ## origin = ???
-        # Your code here
         origin = state.value
-        if origin in automaton.finals:
-            finals.append(i)
-        if origin == automaton.start:
-            start = i
         for symbol, destinations in automaton.transitions[origin].items():
-            # Your code here
-            
+            trans = states.index(partition[destinations[0]].representative)
+
             try:
-                transitions[i,symbol]
+                transitions[i, symbol]
                 assert False
             except KeyError:
-                # Your code here
-                a = { (i,symbol): states.index(partition[destinations[0]].representative) }
-                transitions.update(a)
-                pass
-    
+                transitions[i, symbol] = trans
+
     ## finals = ???
     ## start  = ???
-    # Your code here
-    
+    finals = [i for i in range(len(states)) if states[i].value in automaton.finals]
+    start = states.index(partition[automaton.start].representative)
+
     return DFA(len(states), finals, transitions, start)

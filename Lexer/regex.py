@@ -102,8 +102,8 @@ class Regex:
         print(nfa)
         dfa = nfa_to_dfa(nfa)
         print(dfa)
-        #mini = automata_minimization(dfa)
-        return dfa
+        mini = automata_minimization(dfa)
+        return mini
 
     def regex_tokenizer(self,text, G, skip_whitespaces=True):
         tokens = []
