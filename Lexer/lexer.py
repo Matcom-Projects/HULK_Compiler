@@ -31,12 +31,16 @@ class Lexer:
         return start.to_deterministic()
     
         
-    def _walk(self, string):
+    def _walk(self, string,line,column):
         state = self.automaton
         final = state if state.final else None
         final_lex = lex = ''
         
         for symbol in string:
+            if symbol=='\n':
+                symbol =' '
+                column = 1
+                line +=1
             try:
                 state = state.transitions[symbol][0]
                 lex += symbol
@@ -44,15 +48,19 @@ class Lexer:
                     final_lex = lex
                     final = state
             except KeyError:
-                return final, final_lex
-        return final, final_lex
+                column+=len(final_lex)
+                return final, final_lex,line,column
+            
+        column+=len(final_lex)
+        return final, final_lex,line,column
 
     def _tokenize(self, text):
-
+        line =1
+        column=1
         while len(text)>0:
             if text == 0:
                 break
-            state_final,final = self._walk(text)
+            state_final,final,line,column = self._walk(text,line,column)
             min_tag = 10000
             for state in state_final.state:
                 if state.final:
@@ -62,9 +70,9 @@ class Lexer:
                         final_type = token_type
 
             text = text[len(final):]
-            yield final,final_type,0,0
+            yield final,final_type,line,column
         
-        yield '$', self.eof,0,0
+        yield '$', self.eof,line,column
     
     def __call__(self, text):
         return [ Token(lex, ttype,line,column) for lex, ttype,line,column in self._tokenize(text) ]

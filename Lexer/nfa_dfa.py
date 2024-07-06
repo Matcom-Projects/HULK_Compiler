@@ -92,11 +92,11 @@ def epsilon_closure(automaton, states):
 
     while pending:
         state = pending.pop()
-        closure.add(state)
 
-        if '' in automaton.transitions[state].keys():
-            for target in automaton.transitions[state]['']:
-                pending.append(target)
+        for st in automaton.epsilon_transitions(state):
+            if st not in closure:
+                closure.add(st)
+                pending.append(st)
                 
     return ContainerSet(*closure)
 

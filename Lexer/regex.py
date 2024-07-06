@@ -47,61 +47,38 @@ class Regex:
         T, F, A = G.NonTerminals('T F A')
         pipe, star, opar, cpar, symbol, epsilon = G.Terminals('| * ( ) symbol ε')
 
-        # # > PRODUCTIONS???
-        # # Your code here!!!
-        # ############################ BEGIN PRODUCTIONS ############################  
 
-
-        # # ========================== { E --> T X } ============================== #
-        # E %= T + X, lambda h,s: s[2], None, lambda h,s: s[1]                      
+        # ############################## BEGIN PRODUCTIONS ##############################  
+        # # ========================== {  E --> E | T  } ============================== #                     
+        # # ========================== {  E --> T      } ============================== #
         E %= E + pipe + T, lambda h,s: UnionNode(s[1],s[3])
-        E %= T, lambda h,s: s[1]
-        # # ========================== { X --> |T X } ============================== #
-        # # ========================== { X --> epsilon } ============================== #
-        # X %= pipe + T + X, lambda h,s: s[3], lambda h,s: UnionNode(h[0],s[2])    
-        # X %= G.Epsilon, lambda h,s: h[0]                                                    
-
-        # # ========================== { T --> F Y } ============================== #
-        # T %= F + Y, lambda h,s: s[2], None, lambda h,s: s[1]                      
+        E %= T, lambda h,s: s[1]                                                   
+        # # ========================== {   T --> T F   } ============================== #
+        # # ========================== {   T --> F     } ============================== #                     
         T %= T + F, lambda h,s: ConcatNode(s[1],s[2])
         T %= F, lambda h,s:s[1]
-        # # ========================== { Y --> F Y } ============================== #
-        # # ========================== { Y --> epsilon } ============================== #
-        # Y %= F + Y, lambda h,s: s[2],  lambda h,s: ConcatNode(h[0] , s[1])        
-        # Y %= G.Epsilon, lambda h,s: h[0]                                                    
-
-        # # ========================== { F --> A Z } ============================== #
-        # F %= A + Z, lambda h,s: s[2],None,lambda h,s: s[1]
+        # # ========================== {   F --> A *   } ============================== #
+        # # ========================== {   F --> A     } ============================== #
         F %= A + star, lambda h,s: ClosureNode(s[1])
         F %= A,lambda h,s:s[1]
-        # # ========================== { Z --> * Z } ============================== #
-        # # ========================== { Z --> epsilon } ============================== #
-
-        # # ========================== { A --> symbol } ============================== #
-        # # ========================== { A --> ( E ) } ============================== #
+        # # ========================== { A --> symbol  } ============================== #
+        # # ========================== { A --> ( E )   } ============================== #
         # # ========================== { A --> epsilon } ============================== #
         A %= symbol, lambda h,s: SymbolNode(s[1]) 
         A %= opar + E + cpar, lambda h,s: s[2]
         A %= epsilon, lambda h,s: EpsilonNode(s[1])
+        # ############################### END PRODUCTIONS ###############################
 
-
-        # ############################# END PRODUCTIONS #############################
         self.G = G
         self.automaton = self.build_automaton(text)
 
     def build_automaton(self,text):
         tokens = self.regex_tokenizer(text,self.G)
-        print(tokens)
         parser = LR1Parser(self.G)
         parse,operation = parser([token.token_type for token in tokens],get_shift_reduce=True)
-        print(parse)
-        print(operation)
         ast = evaluate_reverse_parse(parse,operation,tokens)
-        print(ast)
         nfa = ast.evaluate()
-        print(nfa)
         dfa = nfa_to_dfa(nfa)
-        print(dfa)
         mini = automata_minimization(dfa)
         return mini
 

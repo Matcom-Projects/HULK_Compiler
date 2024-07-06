@@ -122,7 +122,7 @@ class Token:
         self.column=column
 
     def __str__(self):
-        return f'{self.token_type}: {self.lex}'
+        return f'{self.token_type}: {self.lex} ({self.line},{self.column})'
 
     def __repr__(self):
         return str(self)
