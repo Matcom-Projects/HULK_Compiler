@@ -179,6 +179,10 @@ class VariableInfo:
     def __init__(self, name, vtype):
         self.name = name
         self.type = vtype
+        self.name_temp = None
+
+    def set_name_temp(self, name: str):
+        self.name_temp = name
 
 class Scope:
     def __init__(self, parent=None):
