@@ -59,22 +59,22 @@ class DFA(NFA):
     def _move(self, symbol):
         try:
             self.current = self.transitions[self.current][symbol][0]
-            return 1
+            return True
         except:
-            return 0
+            return False
     
     def _reset(self):
         self.current = self.start
         
     def recognize(self, string):
-        resp = self.current in self.finals
-        for i in string:
-            if self._move(i):
-                resp = self.current in self.finals
-            else:
-                return 0
-        self.current = self.start
-        return resp
+        self._reset()
+        for symbol in string:
+            try:
+                self._move(symbol)
+            except KeyError:
+                return False
+
+        return self.current in self.finals
     
 def move(automaton, states, symbol):
     moves = set()
@@ -92,12 +92,11 @@ def epsilon_closure(automaton, states):
 
     while pending:
         state = pending.pop()
-        closure.add(state)
-        try:
-            for item in automaton.transitions[state]['']:
-                pending.append(item)
-        except KeyError:
-                        pass
+
+        for st in automaton.epsilon_transitions(state):
+            if st not in closure:
+                closure.add(st)
+                pending.append(st)
                 
     return ContainerSet(*closure)
 
@@ -118,21 +117,25 @@ def nfa_to_dfa(automaton):
             go_to = move(automaton,state,symbol)
             e_closure = epsilon_closure(automaton,go_to)
 
-            epsilonClosure = ContainerSet(*e_closure)
-            if epsilonClosure not in states and len(epsilonClosure):
-                epsilonClosure.id = len(states)
-                epsilonClosure.is_final = any(s in automaton.finals for s in epsilonClosure)
-                states.append(epsilonClosure)
-                pending.append(epsilonClosure)
+            if len(e_closure) == 0:
+                continue
+
+            if e_closure not in states:
+
+                e_closure.id = len(states)
+                e_closure.is_final = any(s in automaton.finals for s in e_closure)
+                states.append(e_closure)
+                pending.append(e_closure)
+            else:
+                e_closure.id = states.index(e_closure)
             # ...
 
             try:
                 transitions[state.id, symbol]
                 assert False, 'Invalid DFA!!!'
             except KeyError:
-                if len(epsilonClosure):
-                    a ={ (state.id,symbol): states.index(epsilonClosure)}
-                    transitions.update(a)
+                transitions[state.id, symbol] = e_closure.id
+                pass
     
     finals = [ state.id for state in states if state.is_final ]
     dfa = DFA(len(states), finals, transitions)

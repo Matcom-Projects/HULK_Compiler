@@ -122,7 +122,7 @@ class Token:
         self.column=column
 
     def __str__(self):
-        return f'{self.token_type}: {self.lex}'
+        return f'{self.token_type}: {self.lex} ({self.line},{self.column})'
 
     def __repr__(self):
         return str(self)
@@ -132,8 +132,8 @@ class Token:
         return True
 
 class UnknownToken(Token):
-    def __init__(self, lex):
-        Token.__init__(self, lex, None)
+    def __init__(self, lex,line,column):
+        Token.__init__(self, lex, None,line,column)
 
     def transform_to(self, token_type):
         return Token(self.lex, token_type)
