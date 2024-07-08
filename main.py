@@ -2,6 +2,7 @@ from Grammar import G
 from cmp.evaluation import evaluate_reverse_parse
 from ParserLR1.Parser_LR1 import LR1Parser
 from CodeGeneration.gen import GenCode
+from SemanticChecker.semanticChecker import *
 import sys
 import dill
 import os
@@ -48,14 +49,14 @@ def exec_file():
     tokens = lexer(text)
     parse, operations = parser([token.token_type for token in tokens], True)
     ast = evaluate_reverse_parse(parse,operations,tokens)
-    # errors = []
-    # collector = TypeCollector(errors)
-    # collector.visit(ast)
-    # context = collector.context
-    # builder = TypeBuilder(context, errors)
-    # builder.visit(ast)
-    # checker = TypeChecker(context, errors)
-    # scope = checker.visit(ast)
+    errors = []
+    collector = TypeCollector(errors)
+    collector.visit(ast)
+    context = collector.context
+    builder = TypeBuilder(context, errors)
+    builder.visit(ast)
+    checker = TypeChecker(context, errors)
+    scope = checker.visit(ast)
     text = GenCode(ast, context)
     run_cpp(text)
 
