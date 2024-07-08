@@ -1,6 +1,6 @@
-from ast.ast import *
+from hulk_ast.ast_nodes import *
 import cmp.visitor as visitor
-from cmp.utils import Context
+from cmp.semantic import Context
 import hashlib
 
 class Auxiliar:
@@ -287,19 +287,19 @@ class HulkToCVisitor(object):
         return f"{name_temp} ({params})"
 
     @visitor.when(GreaterNode)
-    def visit(self, node: GreaterThanNode):
+    def visit(self, node: GreaterNode):
         return f'perform_boolean_comparison({self.visit(node.left)},{self.visit(node.right)},"greater_than")'
 
     @visitor.when(GeqNode)
-    def visit(self, node: GreaterOrEqualNode):
+    def visit(self, node: GeqNode):
         return f'perform_boolean_comparison({self.visit(node.left)},{self.visit(node.right)},"greater_or_eq")'
 
     @visitor.when(LessNode)
-    def visit(self, node: LessThanNode):
+    def visit(self, node: LessNode):
         return f'perform_boolean_comparison({self.visit(node.left)},{self.visit(node.right)},"less_than")'
 
     @visitor.when(LeqNode)
-    def visit(self, node: LessOrEqualNode):
+    def visit(self, node: LeqNode):
         return f'perform_boolean_comparison({self.visit(node.left)},{self.visit(node.right)},"less_or_eq")'
 
     @visitor.when(OrNode)

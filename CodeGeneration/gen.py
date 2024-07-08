@@ -1,5 +1,5 @@
-from CodeGeneration.ast_visitor import HulkToCVisitor, Auxiliar
-from CodeGeneration.context_decl import DefInC
+from .ast_visitor import HulkToCVisitor, Auxiliar
+from .decls_context import DefsInC
 
 
 class GenCode:

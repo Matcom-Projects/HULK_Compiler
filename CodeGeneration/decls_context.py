@@ -1,4 +1,4 @@
-from CodeGeneration.ast_visitor import HulkToCVisitor, Auxiliar
+from .ast_visitor import HulkToCVisitor, Auxiliar
 
 class DefsInC:
     def __init__(self, context) -> None:
