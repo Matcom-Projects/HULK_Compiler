@@ -49,7 +49,7 @@ def exec_file():
     parse, operations = parser([token.token_type for token in tokens], True)
     ast = evaluate_reverse_parse(parse,operations,tokens)
     # errors = []
-    # collector = Collector(errors)
+    # collector = TypeCollector(errors)
     # collector.visit(ast)
     # context = collector.context
     # builder = TypeBuilder(context, errors)
