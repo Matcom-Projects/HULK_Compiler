@@ -83,6 +83,9 @@ class Regex:
         return mini
 
     def regex_tokenizer(self,text, G, skip_whitespaces=True):
+        blen=False
+        countblen=0
+        lex=''
         tokens = []
         # > fixed_tokens = ???
         # Your code here!!!
@@ -91,6 +94,25 @@ class Regex:
             # if skip_whitespaces and char.isspace():
             #     continue
             # # Your code here!!!
+            if blen:
+                if char == '\\':
+                    blen=True
+                    countblen+=1
+                    continue
+                else:
+                    lex=lex+char
+                    countblen-=1
+                    if countblen>0:
+                        continue
+                    else:
+                        blen=False
+                        tokens.append(Token(lex,G['symbol']))
+                        lex=''
+                        continue
+            if char == '\\':
+                blen=True
+                countblen+=1
+                continue
             try:
                 token = fixed_tokens[char]
             except:
