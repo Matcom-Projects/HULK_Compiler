@@ -1,4 +1,4 @@
-from AST.ast import *
+from hulk_ast.ast_nodes import *
 import cmp.visitor as visitor
 from cmp.semantic import Scope
 from cmp.semantic import SemanticError
