@@ -1,5 +1,6 @@
 from Grammar import G
 from cmp.evaluation import evaluate_reverse_parse
+from HULK_Lexer import *
 from ParserLR1.Parser_LR1 import LR1Parser
 from CodeGeneration.gen import GenCode
 from SemanticChecker.semanticChecker import *
@@ -11,24 +12,24 @@ import subprocess
 def load_src():
     route = os.getcwd()
     try:
-        # with open(os.path.join(route, 'lexer.pkl'), 'rb') as lexer_file:
-        #     lexer = dill.load(lexer_file)
+        with open(os.path.join(route, 'lexer.pkl'), 'rb') as lexer_file:
+            lexer = dill.load(lexer_file)
 
         with open(os.path.join(route, 'parser.pkl'), 'rb') as parser_file:
             parser = dill.load(parser_file)
 
         return parser
     except:
-        # lexer =
+        lexer = hulk_lexer(G.EOF)
         parser = LR1Parser(G)
 
-        # with open(os.path.join(route, 'lexer.pkl'), 'wb') as lexer_file:
-        #     dill.dump(lexer, lexer_file)
+        with open(os.path.join(route, 'lexer.pkl'), 'wb') as lexer_file:
+            dill.dump(lexer, lexer_file)
 
         with open(os.path.join(route, 'parser.pkl'), 'wb') as parser_file:
             dill.dump(parser, parser_file)
 
-        return parser #, lexer
+        return parser , lexer
 
 def run_cpp(text):
     with open('temp.cpp', 'w') as file:
@@ -42,11 +43,15 @@ def run_cpp(text):
     print(output.decode())
 
 def exec_file():
-    parser = load_src()
+    parser,lexer = load_src()
     print(parser)
     with open(sys.argv[1]) as opened_file:
         text = opened_file.read()
-    tokens = lexer(text)
+    tokens,errors = lexer(text)
+    if errors != None:
+        for e in errors:
+            print(e)
+        return
     parse, operations = parser([token.token_type for token in tokens], True)
     ast = evaluate_reverse_parse(parse,operations,tokens)
     errors = []
