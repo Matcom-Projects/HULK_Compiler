@@ -42,11 +42,11 @@ class DefsInC:
                         method_name = "method_" + type.name + "_" + method.name
                         method_def = "Object* " + method_name + " (Object* self"
 
-                        method.node.scope.children[0].find_variable("self").setNameC("self")
+                        method.node.scope.children[0].find_variable("self").set_temp_name("self")
 
                         for i, name in enumerate(method.param_names):
                             id_param = "p" + str(i)
-                            method.node.scope.children[0].find_variable(name).setNameC(id_param)
+                            method.node.scope.children[0].find_variable(name).set_temp_name(id_param)
                             method_def += ", Object* " + id_param
 
                         method_def += ")"
@@ -59,7 +59,7 @@ class DefsInC:
 
                 for i, name in enumerate(function.param_names):
                     id_param = "p" + str(i)
-                    function.node.scope.children[0].find_variable(name).setNameC(id_param)
+                    function.node.scope.children[0].find_variable(name).set_temp_name(id_param)
                     function_def += "Object* " + id_param + ", "
 
                 if len(function.param_names):
