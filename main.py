@@ -18,7 +18,7 @@ def load_src():
         with open(os.path.join(route, 'parser.pkl'), 'rb') as parser_file:
             parser = dill.load(parser_file)
 
-        return parser
+        return parser, lexer
     except:
         lexer = hulk_lexer(G.EOF)
         parser = LR1Parser(G)
@@ -29,7 +29,7 @@ def load_src():
         with open(os.path.join(route, 'parser.pkl'), 'wb') as parser_file:
             dill.dump(parser, parser_file)
 
-        return parser , lexer
+        return parser,lexer
 
 def run_cpp(text):
     with open('temp.cpp', 'w') as file:
@@ -44,7 +44,6 @@ def run_cpp(text):
 
 def exec_file():
     parser,lexer = load_src()
-    print(parser)
     with open(sys.argv[1]) as opened_file:
         text = opened_file.read()
     tokens,errors = lexer(text)
