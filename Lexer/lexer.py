@@ -1,4 +1,4 @@
-from cmp.utils import Token
+from cmp.utils import Token,UnknownToken
 from cmp.automata import State
 from Lexer.regex import *
 
@@ -61,6 +61,8 @@ class Lexer:
             if text == 0:
                 break
             state_final,final,line,column = self._walk(text,line,column)
+            if state_final is None:
+                yield final,None,line,column
             min_tag = 10000
             for state in state_final.state:
                 if state.final:
@@ -75,4 +77,4 @@ class Lexer:
         yield '$', self.eof,line,column
     
     def __call__(self, text):
-        return [ Token(lex, ttype,line,column) for lex, ttype,line,column in self._tokenize(text) ]
+        return [ Token(lex, ttype,line,column) if ttype is not None else UnknownToken(lex, line, column) for lex, ttype,line,column in self._tokenize(text) ]
