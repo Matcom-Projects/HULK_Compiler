@@ -14,9 +14,9 @@ class Lexer:
             # Your code here!!!
             # - Remember to tag the final states with the token_type and priority.
             # - <State>.tag might be useful for that purpose ;-)
-            a = Regex(regex).automaton
+            r = Regex(regex)
             
-            a,states = State.from_nfa(a,get_states=True)
+            a,states = State.from_nfa(r.automaton,get_states=True)
             for state in states:
                 if state.final:
                     state.tag = (n,token_type)
