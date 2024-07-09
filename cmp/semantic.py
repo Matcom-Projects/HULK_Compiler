@@ -192,7 +192,13 @@ class Context:
 class VariableInfo:
     def __init__(self, name, vtype):
         self.name = name
+        self.name_temp = None
         self.type:Type = vtype
+
+    def set_temp_name(self, name: str):
+        self.name_temp = name
+
+
 
 class Scope:
     def __init__(self, parent=None):
