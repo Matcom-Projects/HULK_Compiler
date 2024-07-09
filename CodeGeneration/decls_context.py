@@ -1,5 +1,7 @@
 from .ast_visitor import HulkToCVisitor, Auxiliar
 
+
+
 class DefsInC:
     def __init__(self, context) -> None:
         self.context: Context = context
@@ -11,13 +13,20 @@ class DefsInC:
 
         self.generate_definitions()
 
+    @staticmethod
+    def implements_protocol(protocol,tipo):
+        for method in list(protocol.all_methods()):
+            try :tipo.get_method(method[0].name)
+            except: return False
+        return True
+
     def generate_definitions(self):
         for type in self.context.types.values():
             if type.name not in ["Number", "Boolean", "String", "Object", "Range"]:
                 self.protocols[type.name] = []
 
                 for protocol in self.context.protocols.values():
-                    if type.conforms_to(protocol):
+                    if implements_protocol(protocol,type):
                         self.protocols[type.name].append(protocol)
 
                 if type.name not in ["Number", "Boolean", "String", "Object", "Range"]:

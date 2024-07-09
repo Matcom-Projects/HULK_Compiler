@@ -105,7 +105,7 @@ class HulkToCVisitor(object):
 
     @visitor.when(InstantiateNode)
     def visit(self, node: InstantiateNode):
-        vars = scope.get_variables(True)
+        vars = scope.get_variables()
         params = ", ".join([var.name_temp for var in vars])
         objects = ", ".join([f"object* {var.name_temp}" for var in vars])
 
@@ -145,7 +145,7 @@ class HulkToCVisitor(object):
 
     @visitor.when(ExprBlockNode)
     def visit(self, node: ExprBlockNode):
-        vars = scope.get_variables(True)
+        vars = scope.get_variables()
 
         params = ", ".join([var.name_temp for var in vars])
         objects = ", ".join([f"object* {var.name_temp}" for var in vars])
@@ -166,7 +166,7 @@ class HulkToCVisitor(object):
 
     @visitor.when(LetNode)
     def visit(self, node: LetNode):
-        vars = scope.get_variables(True)
+        vars = scope.get_variables()
 
         params = ", ".join([var.name_temp for var in vars])
         objects = ", ".join([f"object* {var.name_temp}" for var in vars])
@@ -235,7 +235,7 @@ class HulkToCVisitor(object):
             return code
 
         else:
-            vars = scope.get_variables(True)
+            vars = scope.get_variables()
 
             params = ", ".join([var.name_temp for var in vars])
             objects = ", ".join([f"object* {var.name_temp}" for var in vars])
@@ -261,7 +261,7 @@ class HulkToCVisitor(object):
 
     @visitor.when(IfNode)
     def visit(self, node: IfNode):
-        vars = scope.get_variables(True)
+        vars = scope.get_variables()
 
         params = ", ".join([var.name_temp for var in vars])
         objects = ", ".join([f"object* {var.name_temp}" for var in vars])
@@ -329,7 +329,7 @@ class HulkToCVisitor(object):
             return code
 
         else:
-            vars = scope.get_variables(True)
+            vars = scope.get_variables()
 
             params = ", ".join([var.name_temp for var in vars])
             objects = ", ".join([f"object* {var.name_temp}" for var in vars])
@@ -360,7 +360,7 @@ class HulkToCVisitor(object):
             return code
 
         else:
-            vars = scope.get_variables(True)
+            vars = scope.get_variables()
 
             params = ", ".join([var.name_temp for var in vars])
             objects = ", ".join([f"object* {var.name_temp}" for var in vars])
@@ -382,7 +382,7 @@ class HulkToCVisitor(object):
 
     @visitor.when(WhileNode)
     def visit(self, node: WhileNode):
-        vars = scope.get_variables(True)
+        vars = scope.get_variables()
 
         params = ", ".join([var.name_temp for var in vars])
         objects = ", ".join([f"object* {var.name_temp}" for var in vars])
@@ -408,7 +408,7 @@ class HulkToCVisitor(object):
         var_iter = self.aux("v")
         scope.children[0].find_variable(node.var).set_temp_name(var_iter)
 
-        vars = scope.get_variables(True)
+        vars = scope.get_variables()
 
         params = ", ".join([var.name_temp for var in vars])
         objects = ", ".join([f"object* {var.name_temp}" for var in vars])

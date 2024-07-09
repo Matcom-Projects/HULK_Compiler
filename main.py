@@ -61,7 +61,8 @@ def exec_file():
     builder.visit(ast)
     checker = TypeChecker(context, errors)
     scope = checker.visit(ast)
-    text = GenCode(ast, context)
+    code = GenCode()
+    text = code(ast, context)
     run_cpp(text)
 
 if __name__ == "__main__":
