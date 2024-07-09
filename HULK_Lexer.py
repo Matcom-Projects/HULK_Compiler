@@ -19,7 +19,7 @@ class hulk_lexer:
         number = '|'.join(n for n in [num1,num2,num3,'0'])   
         symbols="!|@|%|^|&|_|+|-|:|;|<|>|=|,|.|?|~|`|[|]|{|}|#|¿|¡|º|ª|¬|'"
         string= f'"({symbols}|0| |{nonzero_digits}|{letters}|{upper_letters})*"'
-        const='PI|E'
+        constx='PI|E'
         bool= 'true|false'
 
         self.lexer = Lexer([
@@ -39,12 +39,12 @@ class hulk_lexer:
             (protocol,'protocol'),
             (extends,'extends'),
             (plus,'+'),
-            (minus,'-'), 
-            (star,'\\*'), 
+            (minus,'-'),  
             (div,'/'), 
             (mod,'%'), 
             (powx,'^'), 
             (starstar,'\\\\**'), 
+            (star,'\\*'),
             (eq,'='), 
             (coloneq,':='), 
             (eqeq,'=='), 
@@ -54,9 +54,9 @@ class hulk_lexer:
             (leq,'<='), 
             (geq,'>='), 
             (andx,'&'), 
-            (orx,'\\|'), 
             (notx,'!'), 
             (orxorx,'\\\\||'),
+            (orx,'\\|'), 
             (dot,'.'), 
             (comma,','), 
             (colon,':'), 
@@ -73,7 +73,7 @@ class hulk_lexer:
             (strx, string),
             (num,f'({number})'),
             (boolx,f'({bool})'),
-            (const,f'({const})'),
+            (const,f'({constx})'),
             ('space', '  *'),
             (idx, f'({letters})({letters}|0|{nonzero_digits}|{upper_letters})*'),
             (type_idx,f'({upper_letters})({letters}|0|{nonzero_digits}|{upper_letters})*')
