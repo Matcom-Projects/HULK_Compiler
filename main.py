@@ -11,25 +11,25 @@ import subprocess
 
 def load_src():
     route = os.getcwd()
-    try:
-        with open(os.path.join(route, 'lexer.pkl'), 'rb') as lexer_file:
-            lexer = dill.load(lexer_file)
+    # try:
+    #     with open(os.path.join(route, 'lexer.pkl'), 'rb') as lexer_file:
+    #         lexer = dill.load(lexer_file)
 
-        with open(os.path.join(route, 'parser.pkl'), 'rb') as parser_file:
-            parser = dill.load(parser_file)
+    #     with open(os.path.join(route, 'parser.pkl'), 'rb') as parser_file:
+    #         parser = dill.load(parser_file)
 
-        return parser, lexer
-    except:
-        lexer = hulk_lexer(G.EOF)
-        parser = LR1Parser(G)
+    #     return parser, lexer
+    # except:
+    lexer = hulk_lexer(G.EOF)
+    parser = LR1Parser(G)
 
-        with open(os.path.join(route, 'lexer.pkl'), 'wb') as lexer_file:
-            dill.dump(lexer, lexer_file)
+    with open(os.path.join(route, 'lexer.pkl'), 'wb') as lexer_file:
+        dill.dump(lexer, lexer_file)
 
-        with open(os.path.join(route, 'parser.pkl'), 'wb') as parser_file:
-            dill.dump(parser, parser_file)
+    with open(os.path.join(route, 'parser.pkl'), 'wb') as parser_file:
+        dill.dump(parser, parser_file)
 
-        return parser,lexer
+    return parser,lexer
 
 def run_cpp(text):
     with open('temp.cpp', 'w') as file:

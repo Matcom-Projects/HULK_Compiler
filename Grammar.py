@@ -1,5 +1,6 @@
 from cmp.pycompiler import Grammar
 from ParserLR1.Parser_LR1 import LR1Parser
+from hulk_ast.ast_nodes import *
 
 G = Grammar()
 
