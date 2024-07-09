@@ -143,7 +143,7 @@ object* function_parse(object* string);
 
 // String
 object* create_string(const char* str);
-object* string_concat(object* string1, object* string2);
+object* string_concat(object* string1, object* string2, bool space);
 object* method_string_size(object* self);
 object* method_string_to_string(object* str);
 object* method_string_equals(object* string1, object* string2);
