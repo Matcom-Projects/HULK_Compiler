@@ -92,7 +92,7 @@ simple_expr %= ifx + opar + expr + cpar + expr + elif_branch + elsex + simple_ex
 simple_expr %= whilex + opar + expr + cpar + simple_expr, lambda h,s: WhileNode(s[3], s[5])
 simple_expr %= forx + opar + idx + inx + expr + cpar + simple_expr, lambda h,s: ForNode(s[3], s[5], s[7])
 simple_expr %= idx + coloneq + simple_expr, lambda h,s: DestrAssign(s[1], s[3])
-simple_expr %= idx + dot + idx + coloneq + simple_expr, lambda h,s: DestrAssign(s[3], s[5], True)
+simple_expr %= idx + dot + idx + coloneq + simple_expr, lambda h,s: DestrAssign(s[3], s[5], True,obj=s[1])
 simple_expr %= arith_expr, lambda h,s: s[1]
 
 expr_block %= obrace + stat_list + cbrace, lambda h,s: ExprBlockNode(s[2])
@@ -101,7 +101,7 @@ expr_block %= ifx + opar + expr + cpar + expr + elif_branch + elsex + expr_block
 expr_block %= whilex + opar + expr + cpar + expr_block, lambda h,s: WhileNode(s[3], s[5])
 expr_block %= forx + opar + idx + inx + expr + cpar + expr_block, lambda h,s: ForNode(s[3], s[5], s[7])
 expr_block %= idx + coloneq + expr_block, lambda h,s: DestrAssign(s[1], s[3])
-expr_block %= idx + dot + idx + coloneq + expr_block, lambda h,s: DestrAssign(s[3], s[5], True)
+expr_block %= idx + dot + idx + coloneq + expr_block, lambda h,s: DestrAssign(s[3], s[5], True,obj=s[1])
 
 expr_list %= expr + expr_tail, lambda h,s: [s[1]] + s[2]
 expr_list %= G.Epsilon, lambda h,s: []

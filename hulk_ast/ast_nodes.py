@@ -95,10 +95,11 @@ class ForNode(ExprNode):
         self.body = body
 
 class DestrAssign(ExprNode):
-    def __init__(self, id, expr, is_attr = False) -> None:
+    def __init__(self, id, expr, is_attr = False, obj=None) -> None:
         self.id = id
         self.expr = expr
         self.is_attr = is_attr
+        self.obj=obj
 
 class AssignNode(Node):
     def __init__(self, var, expr) -> None:

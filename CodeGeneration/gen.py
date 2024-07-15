@@ -11,14 +11,14 @@ class GenCode:
     def generate(ast, context):
         aux = Auxiliar()
         ast_visitor = HulkToCVisitor(context)
-        decl = DefsInC(context)
+        decl = DefInC(context)
 
         main = "\nint main() {\n"
         main += "   srand(time(NULL));\n\n"
-        main += aux.formated(ast_visitor.visit(ast)) + ";\n"
+        main += aux.formated(ast_visitor.visit(ast.expression)) + ";\n"
         main += "   return 0;\n}"
-        print("aqui")
-        lista = [
+
+        blocks_code = "\n\n".join("\n\n".join(block) for block in [
             ast_visitor.blocks_decl,
             ast_visitor.blocks_let_in,
             ast_visitor.blocks_if_else,
@@ -28,13 +28,7 @@ class GenCode:
             ast_visitor.vector_comp,
             ast_visitor.vector_selector,
             ast_visitor.expr_blocks
-        ]
-        print(lista)
-        blocks_code = "\n\n".join("\n\n".join(block) for block in lista)
-        print(blocks_code)
-        print(main)
-
-
+        ])
 
         declarations, objects, methods, funcs = "", "", "", ""
 
@@ -81,5 +75,5 @@ class GenCode:
             funcs += function_def + " {\n"
             funcs += aux.formated(ast_visitor.visit(function.node), "ret") + "\n"
             funcs += "}\n\n"
-        print()
+
         return declarations + objects + blocks_code + methods + funcs + main

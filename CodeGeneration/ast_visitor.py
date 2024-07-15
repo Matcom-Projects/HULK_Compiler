@@ -20,8 +20,6 @@ class Auxiliar:
 
     @staticmethod
     def formated(code: str, add_return = ""):
-        if isinstance(code, list):
-            code = '\n'.join(code)
         lines = [line for line in code.split('\n') if line.strip()]
         if lines:
             if add_return == "ret":
@@ -50,34 +48,14 @@ class HulkToCVisitor(object):
     def visit(self, node):
         pass
 
-    @visitor.when(ProgramNode)
-    def visit(self, node: ProgramNode):
-        declarations_code = '\n'.join(self._ensure_string(self.visit(decl)) for decl in node.decl_list)
-        if isinstance(node.expr, list):
-            statements_code = '\n'.join(self._ensure_string(self.visit(stmt)) for stmt in node.expr)
-        else:
-            statements_code = self._ensure_string(self.visit(node.expr))
-
-        code = f"{declarations_code}\n\n{statements_code}"
-
-        return code
-
-
-    def _ensure_string(self, result):
-        if isinstance(result, list):
-            return '\n'.join(result)
-        elif isinstance(result, Node):  # Verificar si es una instancia de nodo y visitarlo
-            return self.visit(result)
-        return result
-
     @visitor.when(VarDefNode)
     def visit(self, node: VarDefNode):
-        return node.scope.find_variable(node.id).name_temp
+        return scope.find_variable(node.id).name_temp
 
     @visitor.when(AssignNode)
     def visit(self, node: AssignNode):
         var = self.aux.generate_name("v")
-        node.scope.find_variable(node.var.id).set_temp_name(var)
+        scope.find_variable(node.var).set_temp_name(var)
 
         return "object* " + var + " = copy_object(" + self.visit(node.expr) + ");"
 
@@ -127,11 +105,11 @@ class HulkToCVisitor(object):
 
     @visitor.when(InstantiateNode)
     def visit(self, node: InstantiateNode):
-        vars = node.scope.get_variables()
+        vars = scope.get_variables(True)
         params = ", ".join([var.name_temp for var in vars])
         objects = ", ".join([f"object* {var.name_temp}" for var in vars])
 
-        name_temp = self.aux.generate_name("block")
+        name_temp = self.aux("block")
         create_block = f"object* {name_temp} ({objects});"
         self.blocks_decl.append(create_block)
         create_block += " {\n"
@@ -167,12 +145,12 @@ class HulkToCVisitor(object):
 
     @visitor.when(ExprBlockNode)
     def visit(self, node: ExprBlockNode):
-        vars = node.scope.get_variables()
+        vars = scope.get_variables(True)
 
         params = ", ".join([var.name_temp for var in vars])
         objects = ", ".join([f"object* {var.name_temp}" for var in vars])
 
-        name_temp = self.aux.generate_name("expr_block")
+        name_temp = self.aux("expr_block")
         create_block = f"object* {name_temp} ({objects});"
         self.blocks_decl.append(create_block)
         create_block += " {\n"
@@ -188,12 +166,12 @@ class HulkToCVisitor(object):
 
     @visitor.when(LetNode)
     def visit(self, node: LetNode):
-        vars = node.scope.get_variables()
+        vars = scope.get_variables(True)
 
         params = ", ".join([var.name_temp for var in vars])
         objects = ", ".join([f"object* {var.name_temp}" for var in vars])
 
-        name_temp = self.aux.generate_name("let")
+        name_temp = self.aux("let")
         create_block = f"object* {name_temp} ({objects});"
         self.blocks_decl.append(create_block)
         create_block += " {\n"
@@ -201,7 +179,7 @@ class HulkToCVisitor(object):
         for assign in node.assign_list:
             create_block += "   " + self.visit(assign) + "\n"
 
-        create_block += self.aux.formated(self.visit(node.expr), "ret") + "\n}"
+        create_block += self.aux.formated(self.visit(node.body), "ret") + "\n}"
         self.blocks_let_in.append(create_block)
 
         return f"{name_temp} ({params})"
@@ -210,7 +188,7 @@ class HulkToCVisitor(object):
     def visit(self, node: FuncCallNode):
         function = "func_" + node.id + "("
         for arg in node.args:
-            function += "copy_object(" + self.aux.formated(self.visit(arg)) + "), "
+            function += "copy_object(" + self.visit(arg) + "), "
         if len(node.args) > 0:
             function = function[:-2]
         function += ")"
@@ -232,7 +210,7 @@ class HulkToCVisitor(object):
     @visitor.when(AttrrCallNode)
     def visit(self, node: AttrrCallNode):
         obj = self.visit(node.obj)
-        typex = node.scope.find_variable(obj).type
+        typex = scope.find_variable(obj).type
         if typex.name == "Self":
             typex = typex.referred_type
 
@@ -257,12 +235,12 @@ class HulkToCVisitor(object):
             return code
 
         else:
-            vars = node.scope.get_variables()
+            vars = scope.get_variables(True)
 
             params = ", ".join([var.name_temp for var in vars])
             objects = ", ".join([f"object* {var.name_temp}" for var in vars])
 
-            name_temp = self.aux.generate_name("method_call_block")
+            name_temp = self.aux("method_call_block")
             create_block = f"object* {name_temp} ({objects});"
             self.blocks_decl.append(create_block)
             create_block += " {\n"
@@ -283,12 +261,12 @@ class HulkToCVisitor(object):
 
     @visitor.when(IfNode)
     def visit(self, node: IfNode):
-        vars = node.scope.get_variables()
+        vars = scope.get_variables(True)
 
         params = ", ".join([var.name_temp for var in vars])
         objects = ", ".join([f"object* {var.name_temp}" for var in vars])
 
-        name_temp = self.aux.generate_name("if_else")
+        name_temp = self.aux("if_else")
         create_block = f"object* {name_temp} ({objects});"
         self.blocks_decl.append(create_block)
         create_block += " {\n"
@@ -351,12 +329,12 @@ class HulkToCVisitor(object):
             return code
 
         else:
-            vars = node.scope.get_variables()
+            vars = scope.get_variables(True)
 
             params = ", ".join([var.name_temp for var in vars])
             objects = ", ".join([f"object* {var.name_temp}" for var in vars])
 
-            name_temp = self.aux.generate_name("method_call_block")
+            name_temp = self.aux("method_call_block")
             create_block = f"object* {name_temp} ({objects});"
             self.blocks_decl.append(create_block)
             create_block += " {\n"
@@ -382,12 +360,12 @@ class HulkToCVisitor(object):
             return code
 
         else:
-            vars = node.scope.get_variables()
+            vars = scope.get_variables(True)
 
             params = ", ".join([var.name_temp for var in vars])
             objects = ", ".join([f"object* {var.name_temp}" for var in vars])
 
-            name_temp = self.aux.generate_name("method_call_block")
+            name_temp = self.aux("method_call_block")
             create_block = f"object* {name_temp} ({objects});"
             self.blocks_decl.append(create_block)
             create_block += " {\n"
@@ -404,12 +382,12 @@ class HulkToCVisitor(object):
 
     @visitor.when(WhileNode)
     def visit(self, node: WhileNode):
-        vars = node.scope.get_variables()
+        vars = scope.get_variables(True)
 
         params = ", ".join([var.name_temp for var in vars])
         objects = ", ".join([f"object* {var.name_temp}" for var in vars])
 
-        name_temp = self.aux.generate_name("while")
+        name_temp = self.aux("while")
         create_block = f"object* {name_temp} ({objects});"
         self.blocks_decl.append(create_block)
         create_block += " {\n"
@@ -427,15 +405,15 @@ class HulkToCVisitor(object):
 
     @visitor.when(ForNode)
     def visit(self, node: ForNode):
-        var_iter = self.aux.generate_name("v")
+        var_iter = self.aux("v")
         scope.children[0].find_variable(node.var).set_temp_name(var_iter)
 
-        vars = node.scope.get_variables()
+        vars = scope.get_variables(True)
 
         params = ", ".join([var.name_temp for var in vars])
         objects = ", ".join([f"object* {var.name_temp}" for var in vars])
 
-        name_temp = self.aux.generate_name("for")
+        name_temp = self.aux("for")
         code = f"object* {name_temp} ({objects});"
         self.blocks_decl.append(code)
         code += " {\n"
@@ -470,12 +448,12 @@ class HulkToCVisitor(object):
 
     @visitor.when(ImplicitVector)
     def visit(self, node: ImplicitVector):
-        var_iter = self.aux.generate_name("v")
+        var_iter = self.aux("v")
         scope.children[0].find_variable(node.var).set_temp_name(var_iter)
 
         objects = ", ".join([f"object* {var.name_temp}" for var in vars])
 
-        name_temp_1 = self.aux.generate_name("selector")
+        name_temp_1 = self.aux("selector")
         selector = f"object* {name_temp_1} ({objects});"
         self.blocks_decl.append(selector)
         selector += " {\n"
@@ -485,7 +463,7 @@ class HulkToCVisitor(object):
 
         objects_1 = ", ".join([f"object* {var.name_temp}" for var in vars])
 
-        name_temp = self.aux.generate_name("implicit_vector")
+        name_temp = self.aux("implicit_vector")
         implicit_vector = f"object* {name_temp} ({objects_1});"
         self.blocks_decl.append(implicit_vector)
         implicit_vector += " {\n"

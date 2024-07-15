@@ -89,7 +89,7 @@ type C inherits A {
     }
 
 
-    print(tan(PI) ** 2 + cot(PI) ** 2);
+    print(tan(PI) * 2 + cot(PI) * 2);
 
     let msg = "Hello World" in print(msg);
     let number = 42, text = "The meaning of life is" in
@@ -149,7 +149,7 @@ type C inherits A {
         print(a);
         a := a - 1;
     }
-    
+
     for (x in range(0, 10)) print(x);
     let iterable = range(0, 10) in
         while (iterable.next())
