@@ -74,7 +74,9 @@ class hulk_lexer:
             (num,f'({number})'),
             (boolx,f'({bool})'),
             (const,f'({constx})'),
+            ('jump','\n'),
             ('space', '  *'),
+            ('coment',f'//({letters}|0|{nonzero_digits}|{upper_letters}| |{string})*(\n)'),
             (idx, f'({letters})({letters}|0|{nonzero_digits}|{upper_letters})*'),
             (type_idx,f'({upper_letters})({letters}|0|{nonzero_digits}|{upper_letters})*')
         ], eof)
@@ -85,7 +87,7 @@ class hulk_lexer:
         tokens_return=[]
         unknowntokens =[]
         for tk in tokens:
-            if tk.token_type == 'space':
+            if tk.token_type in ['jump','space','coment']:
                 continue
             elif tk.is_valid:
                 tokens_return.append(tk)

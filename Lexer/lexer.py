@@ -38,7 +38,6 @@ class Lexer:
         
         for symbol in string:
             if symbol=='\n':
-                symbol =' '
                 column = 1
                 line +=1
             try:

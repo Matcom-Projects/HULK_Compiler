@@ -1,7 +1,10 @@
 from .ast_visitor import HulkToCVisitor, Auxiliar
 
-
-
+def implements_protocol(protocol,tipo):
+    for method in list(protocol.all_methods()):
+        try :tipo.get_method(method[0].name)
+        except: return False
+    return True
 class DefsInC:
     def __init__(self, context) -> None:
         self.context: Context = context
@@ -13,20 +16,13 @@ class DefsInC:
 
         self.generate_definitions()
 
-    @staticmethod
-    def implements_protocol(protocol,tipo):
-        for method in list(protocol.all_methods()):
-            try :tipo.get_method(method[0].name)
-            except: return False
-        return True
-
     def generate_definitions(self):
         for type in self.context.types.values():
             if type.name not in ["Number", "Boolean", "String", "Object", "Range"]:
                 self.protocols[type.name] = []
 
                 for protocol in self.context.protocols.values():
-                    if self.implements_protocol(protocol,type):
+                    if implements_protocol(protocol,type):
                         self.protocols[type.name].append(protocol)
 
                 if type.name not in ["Number", "Boolean", "String", "Object", "Range"]:
@@ -51,33 +47,31 @@ class DefsInC:
                         method_name = "method_" + type.name + "_" + method.name
                         method_def = "Object* " + method_name + " (Object* self"
 
-                        if len(method.node.scope.children) != 0:
-                            if method.node.scope.children[0].find_variable("self") is not None:
-                                method.node.scope.children[0].find_variable("self").set_temp_name("self")
+                        method.node.scope.children[0].find_variable("self").set_temp_name("self")
 
                         for i, name in enumerate(method.param_names):
                             id_param = "p" + str(i)
-                            # method.node.scope.children[0].find_variable(name).set_temp_name(id_param)
+                            method.node.scope.children[0].find_variable(name).set_temp_name(id_param)
                             method_def += ", Object* " + id_param
 
                         method_def += ")"
                         self.method_defs[type.name].append((method_def, method_name, method))
 
-        # for function in self.context.functions.values():
-        #     if function.name not in ['print', 'sqrt', 'sin', 'cos', 'exp', 'log', 'rand', 'range', 'parse']:
-        #         function_name = "function_" + function.name
-        #         function_def = "Object* " + function_name + " ("
+        for function in self.context.functions.values():
+            if function.name not in ['print', 'sqrt', 'sin', 'cos', 'exp', 'log', 'rand', 'range', 'parse']:
+                function_name = "function_" + function.name
+                function_def = "Object* " + function_name + " ("
 
-        #         for i, name in enumerate(function.param_names):
-        #             id_param = "p" + str(i)
-        #             function.node.scope.children[0].find_variable(name).set_temp_name(id_param)
-        #             function_def += "Object* " + id_param + ", "
+                for i, name in enumerate(function.param_names):
+                    id_param = "p" + str(i)
+                    function.node.scope.children[0].find_variable(name).set_temp_name(id_param)
+                    function_def += "Object* " + id_param + ", "
 
-        #         if len(function.param_names):
-        #             function_def = function_def[:-2]
+                if len(function.param_names):
+                    function_def = function_def[:-2]
 
-        #         function_def += ")"
-        #         self.function_defs.append((function_def, function_name, function))
+                function_def += ")"
+                self.function_defs.append((function_def, function_name, function))
 
     @staticmethod
     def generate(ast, context):

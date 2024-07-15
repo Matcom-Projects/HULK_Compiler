@@ -69,7 +69,7 @@ class Type:
         else:
             raise SemanticError(f'Attribute "{name}" is already defined in {self.name}.')
 
-    def get_method(self, name:str):
+    def get_method(self, name:str): 
         try:
             return next(method for method in self.methods if method.name == name)
         except StopIteration:
@@ -165,7 +165,7 @@ class Context:
             raise SemanticError(f'Type with the same name ({name}) already in context.')
         typex = self.types[name] = Type(name)
         return typex
-
+    
     def create_protocol(self, name:str):
         if name in self.protocols:
             raise SemanticError(f'Protocol with the same name ({name}) already in context.')
@@ -192,13 +192,7 @@ class Context:
 class VariableInfo:
     def __init__(self, name, vtype):
         self.name = name
-        self.name_temp = None
         self.type:Type = vtype
-
-    def set_temp_name(self, name: str):
-        self.name_temp = name
-
-
 
 class Scope:
     def __init__(self, parent=None):
@@ -220,19 +214,14 @@ class Scope:
         self.locals.append(info)
         return info
 
-    def get_variables(self):
-        vars = [x for x in self.locals]
-        if self.parent is not None:
-            vars.extend(self.parent.get_variables(True))
-        return vars
-
     def find_variable(self, vname, index=None):
         locals = self.locals if index is None else itt.islice(self.locals, index)
-        try:
-            return next(x for x in locals if x.name == vname)
-        except StopIteration:
-            return self.parent.find_variable(vname, self.index) if self.parent is None else None
-
+        
+        for x in locals:
+            if(x.name==vname):
+                return x
+        return (None if self.parent==None else self.parent.find_variable(vname, self.index))
+        
     def is_defined(self, vname):
         return self.find_variable(vname) is not None
 
